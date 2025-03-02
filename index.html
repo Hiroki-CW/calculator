@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>H5 计算器</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      height: 100vh;
+    }
+    /* 计算器容器 */
+    .calculator {
+      /* 宽度减少 10%，举例：80%，最大宽度320px */
+      width: 80%;
+      max-width: 320px;
+      /* 高度增加 10%，通过 scale 在垂直方向拉伸 */
+      transform: scale(1, 1.1);
+      transform-origin: top center;
+
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    /* 显示区域 + 删除键 */
+    .display-container {
+      width: 90%;
+      position: relative;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+    }
+    /* 显示屏：改为 85% 黑色 */
+    .display {
+      flex: 1;
+      font-size: 2rem;
+      text-align: right;
+      padding-right: 40px; /* 给删除键留出空间 */
+      color: #1E90FF; /* 这里改成亮蓝色 */
+      overflow-x: auto;
+    }
+    /* 删除键 */
+    .backspace {
+      position: absolute;
+      right: 0;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: #999;
+      padding: 5px 10px;
+      user-select: none;
+    }
+    .backspace:hover {
+      color: #000;
+    }
+    /* 按钮区域 */
+    .buttons {
+      width: 90%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    /* 按钮通用样式：文字统一为白色 */
+    .button {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: none;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      height: 60px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s, opacity 0.2s;
+      color: #fff;
+    }
+    .button:active {
+      opacity: 0.8;
+    }
+
+    /*
+      以下为 20 个更深、更饱和的马卡龙色示例，全部采用白色文字。
+      若你仍觉得某些色块不够舒适，可自行再做微调。
+    */
+    .buttons .button:nth-of-type(1)  { /* C */
+      background-color: #F2795C; /* 橘红 */
+    }
+    .buttons .button:nth-of-type(2)  { /* () */
+      background-color: #FFB84C; /* 橙黄 */
+    }
+    .buttons .button:nth-of-type(3)  { /* % */
+      background-color: #FDE63B; /* 柠檬黄 */
+      color: #fff; /* 依旧白色文字，若过亮可再调暗 */
+    }
+    .buttons .button:nth-of-type(4)  { /* ÷ */
+      background-color: #86F76C; /* 亮草绿 */
+    }
+    .buttons .button:nth-of-type(5)  { /* 7 */
+      background-color: #40D4E0; /* 青色 */
+    }
+    .buttons .button:nth-of-type(6)  { /* 8 */
+      background-color: #4F88FF; /* 天蓝 */
+    }
+    .buttons .button:nth-of-type(7)  { /* 9 */
+      background-color: #9997fc; /* 蓝紫 */
+    }
+    .buttons .button:nth-of-type(8)  { /* × */
+      background-color: #fa7fd1; /* 玫紫 */
+    }
+    .buttons .button:nth-of-type(9)  { /* 4 */
+      background-color: #4DA9F7; /* 深天蓝 */
+    }
+    .buttons .button:nth-of-type(10) { /* 5 */
+      background-color: #40C6A3; /* 青绿 */
+    }
+    .buttons .button:nth-of-type(11) { /* 6 */
+      background-color: #fa7fa0; /* 粉红 */
+    }
+    .buttons .button:nth-of-type(12) { /* - */
+      background-color: #f78e79; /* 橘红 */
+    }
+    .buttons .button:nth-of-type(13) { /* 1 */
+      background-color: #f5e473; /* 浅青 */
+    }
+    .buttons .button:nth-of-type(14) { /* 2 */
+      background-color: #FF6373; /* 樱桃粉 */
+    }
+    .buttons .button:nth-of-type(15) { /* 3 */
+      background-color: #5AC4CA; /* 柠檬黄 */
+    }
+    .buttons .button:nth-of-type(16) { /* + */
+      background-color: #FF4EB3; /* 荧光粉 */
+    }
+    .buttons .button:nth-of-type(17) { /* +/- */
+      background-color: #B2EB41; /* 果绿 */
+    }
+    .buttons .button:nth-of-type(18) { /* 0 */
+      background-color: #54DA73; /* 绿 */
+    }
+    .buttons .button:nth-of-type(19) { /* . */
+      background-color: #e69dfc; /* 亮玫紫 */
+    }
+    .buttons .button:nth-of-type(20) { /* = */
+      background-color: #4DC86A; /* 深绿 */
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <!-- 显示区域（含删除键） -->
+    <div class="display-container">
+      <div class="display" id="display">0</div>
+      <div class="backspace" id="backspace">←</div>
+    </div>
+
+    <!-- 按钮区域 -->
+    <div class="buttons">
+      <!-- 第一行：清除、括号、百分号、除法 -->
+      <button class="button clear" id="clear">C</button>
+      <button class="button operator" id="parentheses">()</button>
+      <button class="button operator" data-value="%">%</button>
+      <button class="button operator" data-value="/">÷</button>
+      
+      <!-- 第二行：7、8、9、乘法 -->
+      <button class="button" data-value="7">7</button>
+      <button class="button" data-value="8">8</button>
+      <button class="button" data-value="9">9</button>
+      <button class="button operator" data-value="*">×</button>
+      
+      <!-- 第三行：4、5、6、减法 -->
+      <button class="button" data-value="4">4</button>
+      <button class="button" data-value="5">5</button>
+      <button class="button" data-value="6">6</button>
+      <button class="button operator" data-value="-">-</button>
+      
+      <!-- 第四行：1、2、3、加法 -->
+      <button class="button" data-value="1">1</button>
+      <button class="button" data-value="2">2</button>
+      <button class="button" data-value="3">3</button>
+      <button class="button operator" data-value="+">+</button>
+      
+      <!-- 第五行：正负号、0、小数点、等号 -->
+      <button class="button plus-minus" id="plusMinus">+/-</button>
+      <button class="button" data-value="0">0</button>
+      <button class="button" data-value=".">.</button>
+      <button class="button equal" id="equal">=</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const display = document.getElementById('display');
+      const backspaceBtn = document.getElementById('backspace');
+      const clearBtn = document.getElementById('clear');
+      const equalBtn = document.getElementById('equal');
+      const parenthesesBtn = document.getElementById('parentheses');
+      const plusMinusBtn = document.getElementById('plusMinus');
+      const allButtons = document.querySelectorAll('.button[data-value]');
+      
+      let currentInput = '';
+      let isOpenParenthesis = false; // 用于控制()插入
+
+      // 更新显示函数
+      function updateDisplay(value) {
+        // 如果输入为空，就显示 "0"
+        display.textContent = value === '' ? '0' : value;
+      }
+
+      // 点击数字、操作符按钮
+      allButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const val = button.getAttribute('data-value');
+          currentInput += val;
+          updateDisplay(currentInput);
+        });
+      });
+
+      // 清除全部
+      clearBtn.addEventListener('click', () => {
+        currentInput = '';
+        updateDisplay(currentInput);
+      });
+
+      // 删除单个字符
+      backspaceBtn.addEventListener('click', () => {
+        if (currentInput !== '') {
+          currentInput = currentInput.slice(0, -1);
+          updateDisplay(currentInput);
+        }
+      });
+
+      // 括号：简单切换插入 ( 或 )
+      parenthesesBtn.addEventListener('click', () => {
+        if (!isOpenParenthesis) {
+          currentInput += '(';
+          isOpenParenthesis = true;
+        } else {
+          currentInput += ')';
+          isOpenParenthesis = false;
+        }
+        updateDisplay(currentInput);
+      });
+
+      // 正负号切换
+      plusMinusBtn.addEventListener('click', () => {
+        if (currentInput) {
+          if (currentInput.charAt(0) === '-') {
+            currentInput = currentInput.slice(1);
+          } else {
+            currentInput = '-' + currentInput;
+          }
+          updateDisplay(currentInput);
+        }
+      });
+
+      // 计算结果
+      equalBtn.addEventListener('click', () => {
+        if (!currentInput) return;
+        try {
+          // 这里使用eval简化处理，注意安全问题
+          let result = eval(currentInput);
+          currentInput = result.toString();
+        } catch (error) {
+          currentInput = '错误';
+        }
+        updateDisplay(currentInput);
+      });
+    })();
+  </script>
+</body>
+</html>
